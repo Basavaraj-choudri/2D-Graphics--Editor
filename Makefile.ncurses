@@ -1,0 +1,66 @@
+# Makefile for 2D Graphics Editor with ncurses support
+
+# Choose your build target: make or make ncurses
+
+CC = gcc
+CFLAGS = -Wall -std=c99
+LIBS_BASIC = -lm
+LIBS_NCURSES = -lncurses -lm
+
+TARGET_BASIC = graphics_editor
+TARGET_NCURSES = graphics_editor_ncurses
+
+SRCS_BASIC = graphics.c main.c
+SRCS_NCURSES = graphics.c graphics_ncurses.c main.c
+
+OBJS_BASIC = $(SRCS_BASIC:.c=.o)
+OBJS_NCURSES = $(SRCS_NCURSES:.c=.o)
+
+# Default target (basic version without ncurses)
+all: $(TARGET_BASIC)
+
+# Basic version
+$(TARGET_BASIC): $(OBJS_BASIC)
+	$(CC) $(CFLAGS) -o $(TARGET_BASIC) $(OBJS_BASIC) $(LIBS_BASIC)
+	@echo "Basic version built successfully! Run with ./$(TARGET_BASIC)"
+
+# ncurses version
+ncurses: $(TARGET_NCURSES)
+
+$(TARGET_NCURSES): graphics_ncurses.o graphics.o main_ncurses.o
+	$(CC) $(CFLAGS) -DUSE_NCURSES -o $(TARGET_NCURSES) graphics_ncurses.o graphics.o main_ncurses.o $(LIBS_NCURSES)
+	@echo "ncurses version built successfully! Run with ./$(TARGET_NCURSES)"
+
+# Compile source files
+%.o: %.c graphics.h
+	$(CC) $(CFLAGS) -c $< -o $@
+
+graphics_ncurses.o: graphics_ncurses.c graphics.h
+	$(CC) $(CFLAGS) -DUSE_NCURSES -c graphics_ncurses.c -o graphics_ncurses.o
+
+main_ncurses.o: main.c graphics.h
+	$(CC) $(CFLAGS) -DUSE_NCURSES -c main.c -o main_ncurses.o
+
+# Run the basic program
+run: $(TARGET_BASIC)
+	./$(TARGET_BASIC)
+
+# Run the ncurses program
+run-ncurses: $(TARGET_NCURSES)
+	./$(TARGET_NCURSES)
+
+# Clean build artifacts
+clean:
+	rm -f $(OBJS_BASIC) $(OBJS_NCURSES) graphics_ncurses.o main_ncurses.o $(TARGET_BASIC) $(TARGET_NCURSES) $(TARGET_BASIC).exe $(TARGET_NCURSES).exe
+
+# Help target
+help:
+	@echo "Available targets:"
+	@echo "  make              - Compile basic version (no ncurses)"
+	@echo "  make ncurses      - Compile ncurses version"
+	@echo "  make run          - Compile and run basic version"
+	@echo "  make run-ncurses  - Compile and run ncurses version"
+	@echo "  make clean        - Remove compiled files"
+	@echo "  make help         - Show this help message"
+
+.PHONY: all ncurses run run-ncurses clean help
